@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title|default:"Explore" }} · SkillSwap{% endblock %}
+
+{% block content %}
+<h2 class="mb-3">{{ title|default:"Explore" }}</h2>
+
+{# Фильтры показываем только на Explore (там title не передаётся) #}
+{% if not title %}
+<form method="get" action="{% url 'home' %}" class="row g-2 mb-4">
+  <div class="col-md-3">
+    <input type="text" name="q" class="form-control" placeholder="Поиск по названию"
+           value="{{ request.GET.q }}">
+  </div>
+
+  <div class="col-md-2">
+    <select name="category" class="form-select">
+      <option value="">Все категории</option>
+      {% for c in categories %}
+        <option value="{{ c.pk }}" {% if request.GET.category == c.pk|stringformat:"s" %}selected{% endif %}>
+          {{ c.name }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="col-md-2">
+    <select name="level" class="form-select">
+      <option value="">Любой уровень</option>
+      {% for value, label in levels %}
+        <option value="{{ value }}" {% if request.GET.level == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="col-md-2">
+    <select name="format" class="form-select">
+      <option value="">Online / Offline</option>
+      {% for value, label in formats %}
+        <option value="{{ value }}" {% if request.GET.format == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="col-md-2">
+    <select name="min_rating" class="form-select">
+      <option value="">Любой рейтинг</option>
+      <option value="4" {% if request.GET.min_rating == "4" %}selected{% endif %}>4+</option>
+      <option value="3" {% if request.GET.min_rating == "3" %}selected{% endif %}>3+</option>
+      <option value="2" {% if request.GET.min_rating == "2" %}selected{% endif %}>2+</option>
+    </select>
+  </div>
+
+  <div class="col-md-1 d-grid">
+    <button type="submit" class="btn btn-primary">Найти</button>
+  </div>
+  <div class="col-12">
+    <a href="{% url 'home' %}" class="small">Сбросить фильтры</a>
+  </div>
+</form>
+{% endif %}
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+  {% for offer in offers %}
+    <div class="col">
+      <div class="card h-100">
+        {% if offer.image %}
+          <img src="{{ offer.image.url }}" class="card-img-top" alt="{{ offer.title }}"
+               style="height: 180px; object-fit: cover;">
+        {% endif %}
+
+        <div class="card-body">
+          <h5 class="card-title">
+            <a href="{% url 'offer_detail' offer.pk %}" class="text-decoration-none">{{ offer.title }}</a>
+          </h5>
+
+          <p class="mb-2">
+            <span class="badge bg-secondary">{{ offer.category.name }}</span>
+            <span class="badge bg-info text-dark">{{ offer.get_level_display }}</span>
+            <span class="badge bg-light text-dark border">{{ offer.get_format_display }}</span>
+          </p>
+
+          <p class="card-text text-muted small mb-1">
+            Автор:
+            <a href="{% url 'public_profile' offer.author.username %}">{{ offer.author.username }}</a>
+          </p>
+          <p class="card-text text-muted small mb-1">Длительность: {{ offer.duration }}</p>
+          <p class="card-text text-muted small mb-0">Создано: {{ offer.created_at|date:"d.m.Y" }}</p>
+        </div>
+
+        <div class="card-footer">
+          {% if offer.avg_rating %}
+            ⭐ {{ offer.avg_rating|floatformat:1 }}
+            <span class="text-muted small">({{ offer.reviews_count }})</span>
+          {% else %}
+            <span class="text-muted small">Оценок пока нет</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% empty %}
+    <div class="col-12">
+      <div class="alert alert-light border">Предложений не найдено.</div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

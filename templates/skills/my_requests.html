@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}My Requests · SkillSwap{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">My Requests</h2>
+
+
+<h4 class="mb-3">Полученные</h4>
+
+{% if received %}
+<div class="table-responsive mb-5">
+  <table class="table align-middle">
+    <thead>
+      <tr>
+        <th>Предложение</th>
+        <th>От кого</th>
+        <th>Дата</th>
+        <th>Статус</th>
+        <th>Действия</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for req in received %}
+      <tr>
+        <td><a href="{% url 'offer_detail' req.offer.pk %}">{{ req.offer.title }}</a></td>
+        <td><a href="{% url 'public_profile' req.student.username %}">{{ req.student.username }}</a></td>
+        <td>{{ req.created_at|date:"d.m.Y" }}</td>
+        <td>
+          <span class="badge
+            {% if req.status == 'pending' %}bg-warning text-dark
+            {% elif req.status == 'accepted' %}bg-primary
+            {% elif req.status == 'completed' %}bg-success
+            {% else %}bg-secondary{% endif %}">
+            {{ req.get_status_display }}
+          </span>
+        </td>
+        <td>
+          <div class="d-flex gap-2">
+            {% if req.status == 'pending' %}
+              <form method="post" action="{% url 'handle_request' req.pk 'accept' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-success">Принять</button>
+              </form>
+              <form method="post" action="{% url 'handle_request' req.pk 'reject' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger">Отклонить</button>
+              </form>
+            {% elif req.status == 'accepted' %}
+              <form method="post" action="{% url 'handle_request' req.pk 'complete' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-primary">Занятие проведено</button>
+              </form>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+  <p class="text-muted mb-5">Запросов на ваши предложения пока нет.</p>
+{% endif %}
+
+<h4 class="mb-3">Отправленные</h4>
+
+{% if sent %}
+<div class="table-responsive">
+  <table class="table align-middle">
+    <thead>
+      <tr>
+        <th>Предложение</th>
+        <th>Преподаватель</th>
+        <th>Дата</th>
+        <th>Статус</th>
+        <th>Действия</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for req in sent %}
+      <tr>
+        <td><a href="{% url 'offer_detail' req.offer.pk %}">{{ req.offer.title }}</a></td>
+        <td><a href="{% url 'public_profile' req.teacher.username %}">{{ req.teacher.username }}</a></td>
+        <td>{{ req.created_at|date:"d.m.Y" }}</td>
+        <td>
+          <span class="badge
+            {% if req.status == 'pending' %}bg-warning text-dark
+            {% elif req.status == 'accepted' %}bg-primary
+            {% elif req.status == 'completed' %}bg-success
+            {% else %}bg-secondary{% endif %}">
+            {{ req.get_status_display }}
+          </span>
+        </td>
+        <td>
+          {% if req.status == 'pending' or req.status == 'accepted' %}
+            <form method="post" action="{% url 'handle_request' req.pk 'cancel' %}"
+                  onsubmit="return confirm('Отменить запрос?')">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-danger">Отменить</button>
+            </form>
+          {% elif req.status == 'completed' %}
+            <a href="{% url 'offer_detail' req.offer.pk %}" class="btn btn-sm btn-outline-primary">
+              Оценить и оставить отзыв
+            </a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+  <p class="text-muted">Вы пока не отправляли запросов. Найдите предложение на странице
+    <a href="{% url 'home' %}">Explore</a>.</p>
+{% endif %}
+{% endblock %}

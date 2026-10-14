@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Mentors · SkillSwap{% endblock %}
+
+{% block content %}
+<h2 class="mb-3">Mentors</h2>
+<p class="text-muted">Пользователи, у которых есть опубликованные предложения.</p>
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+  {% for mentor in mentors %}
+    <div class="col">
+      <div class="card h-100 text-center">
+        <div class="card-body">
+          {% if mentor.avatar %}
+            <img src="{{ mentor.avatar.url }}" alt="{{ mentor.username }}"
+                 class="rounded-circle mb-3" style="width: 96px; height: 96px; object-fit: cover;">
+          {% else %}
+            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto mb-3"
+                 style="width: 96px; height: 96px; font-size: 2rem;">
+              {{ mentor.username|first|upper }}
+            </div>
+          {% endif %}
+
+          <h5 class="card-title mb-1">
+            <a href="{% url 'public_profile' mentor.username %}" class="text-decoration-none">{{ mentor.username }}</a>
+          </h5>
+
+          {% if mentor.bio %}
+            <p class="text-muted small mb-0">{{ mentor.bio|truncatechars:90 }}</p>
+          {% endif %}
+        </div>
+
+        <div class="card-footer d-flex justify-content-between small">
+          <span>Предложений: <strong>{{ mentor.offers_count }}</strong></span>
+          <span>
+            {% if mentor.average_rating %}⭐ {{ mentor.average_rating }}{% else %}<span class="text-muted">без оценок</span>{% endif %}
+          </span>
+        </div>
+      </div>
+    </div>
+  {% empty %}
+    <div class="col-12">
+      <div class="alert alert-light border">Пока нет пользователей с опубликованными предложениями.</div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Управление категориями · SkillSwap{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-lg-4 mb-4">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">
+          {% if editing %}Переименовать категорию{% else %}Новая категория{% endif %}
+        </h5>
+        <form method="post">
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+          {% endif %}
+
+          {% for field in form %}
+            <div class="mb-3">
+              <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+            </div>
+          {% endfor %}
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              {% if editing %}Сохранить{% else %}Добавить{% endif %}
+            </button>
+            {% if editing %}
+              <a href="{% url 'category_manage' %}" class="btn btn-link">Отмена</a>
+            {% endif %}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-8">
+    <h2 class="mb-3">Категории</h2>
+
+    {% if categories %}
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>Название</th>
+            <th>Предложений</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in categories %}
+          {% with n=c.offers.count %}
+          <tr {% if editing and editing.pk == c.pk %}class="table-active"{% endif %}>
+            <td>{{ c.name }}</td>
+            <td>{{ n }}</td>
+            <td>
+              <div class="d-flex gap-2">
+                <a href="{% url 'category_edit' c.pk %}" class="btn btn-sm btn-outline-secondary">Изменить</a>
+
+                <form method="post" action="{% url 'category_delete' c.pk %}"
+                      onsubmit="return confirm('Удалить категорию «{{ c.name|escapejs }}»{% if n %} вместе со всеми её предложениями ({{ n }}), их отзывами и запросами{% endif %}? Это действие нельзя отменить.')">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-outline-danger">Удалить</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endwith %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="text-muted small">
+      Удаление категории удаляет и все её предложения вместе с отзывами, запросами на занятия
+      и записями в избранном.
+    </p>
+    {% else %}
+      <div class="alert alert-light border">Категорий пока нет. Добавьте первую.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

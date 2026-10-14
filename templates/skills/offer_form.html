@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if offer %}Редактирование{% else %}Новое предложение{% endif %} · SkillSwap{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <h2 class="mb-3">{% if offer %}Редактирование предложения{% else %}Новое предложение{% endif %}</h2>
+    {% if offer and offer.status == 'published' and not user.is_moderator and not user.is_superuser %}
+      <div class="alert alert-warning">
+        После сохранения предложение вернётся на модерацию и пропадёт из списка,
+        пока админ не подтвердит изменения.
+      </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      {% for field in form %}
+        <div class="mb-3">
+          <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.name == 'image' and offer and offer.image %}
+            <div class="form-text">Сейчас загружена картинка. Выберите файл, только если хотите заменить её.</div>
+          {% endif %}
+          {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+      {% endfor %}
+
+      <div class="d-flex flex-wrap gap-2">
+        <button type="submit" class="btn btn-primary">
+          {% if not offer %}Отправить на модерацию
+          {% elif user.is_moderator or user.is_superuser %}Сохранить
+          {% else %}Сохранить и отправить на модерацию{% endif %}
+        </button>
+
+
+        {% if not offer or offer.author_id == user.id and offer.status != 'published' %}
+          <button type="submit" name="draft" class="btn btn-outline-secondary">Сохранить как черновик</button>
+        {% endif %}
+
+        <a href="{% if offer %}{% url 'offer_detail' offer.pk %}{% else %}{% url 'my_offers' %}{% endif %}"
+           class="btn btn-link">Отмена</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

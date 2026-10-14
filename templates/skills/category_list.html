@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Categories · SkillSwap{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="mb-0">Categories</h2>
+  {% if user.is_superuser or user.role == 'superadmin' %}
+    <a href="{% url 'category_manage' %}" class="btn btn-outline-secondary btn-sm">Управление категориями</a>
+  {% endif %}
+</div>
+
+<p class="text-muted">Выберите категорию, чтобы посмотреть все предложения в ней.</p>
+
+<div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
+  {% for c in categories %}
+    <div class="col">
+      <a href="{% url 'home' %}?category={{ c.pk }}" class="text-decoration-none">
+        <div class="card h-100 text-center">
+          <div class="card-body">
+            <h5 class="card-title mb-1">{{ c.name }}</h5>
+            <span class="text-muted small">
+              {% if c.offers_count %}Предложений: {{ c.offers_count }}{% else %}Пока пусто{% endif %}
+            </span>
+          </div>
+        </div>
+      </a>
+    </div>
+  {% empty %}
+    <div class="col-12">
+      <div class="alert alert-light border">Категорий пока нет.</div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

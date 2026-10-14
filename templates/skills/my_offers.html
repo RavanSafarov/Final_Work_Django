@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}My Offers · SkillSwap{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="mb-0">My Offers</h2>
+  <a href="{% url 'offer_create' %}" class="btn btn-success">+ Новое предложение</a>
+</div>
+
+{% if offers %}
+<div class="table-responsive">
+  <table class="table align-middle">
+    <thead>
+      <tr>
+        <th>Название</th>
+        <th>Категория</th>
+        <th>Уровень / формат</th>
+        <th>Рейтинг</th>
+        <th>Создано</th>
+        <th>Статус</th>
+        <th>Действия</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for offer in offers %}
+      <tr>
+        <td><a href="{% url 'offer_detail' offer.pk %}">{{ offer.title }}</a></td>
+        <td>{{ offer.category.name }}</td>
+        <td>{{ offer.get_level_display }} · {{ offer.get_format_display }}</td>
+        <td>
+          {% if offer.avg_rating %}⭐ {{ offer.avg_rating|floatformat:1 }}{% else %}<span class="text-muted">нет</span>{% endif %}
+        </td>
+        <td>{{ offer.created_at|date:"d.m.Y" }}</td>
+        <td>
+          <span class="badge
+            {% if offer.status == 'published' %}bg-success
+            {% elif offer.status == 'pending' %}bg-warning text-dark
+            {% elif offer.status == 'rejected' %}bg-danger
+            {% else %}bg-secondary{% endif %}">
+            {{ offer.get_status_display }}
+          </span>
+        </td>
+        <td>
+          <div class="d-flex gap-2">
+            <a href="{% url 'offer_update' offer.pk %}" class="btn btn-sm btn-outline-secondary">Изменить</a>
+            <form method="post" action="{% url 'offer_delete' offer.pk %}"
+                  onsubmit="return confirm('Удалить предложение «{{ offer.title|escapejs }}»?')">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-danger">Удалить</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<p class="text-muted small">
+  Draft — черновик, виден только вам. Pending — ждёт подтверждения админом.
+  Rejected — отклонено, после правки можно отправить на модерацию снова.
+</p>
+{% else %}
+  <div class="alert alert-light border">
+    У вас пока нет предложений.
+    <a href="{% url 'offer_create' %}">Создайте первое</a>.
+  </div>
+{% endif %}
+{% endblock %}
